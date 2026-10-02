@@ -33,7 +33,7 @@ public class CategoryController {
     }
 
     @PatchMapping("/categories/{id}")
-    public CategoryResponseDTO put(@PathVariable("id") Integer categoryId, @RequestBody CategoryRequestDTO categoryRequestDTO) {
+    public CategoryResponseDTO patch(@PathVariable("id") Integer categoryId, @RequestBody CategoryRequestDTO categoryRequestDTO) {
         return categoryService.update(categoryId, categoryRequestDTO);
     }
 
