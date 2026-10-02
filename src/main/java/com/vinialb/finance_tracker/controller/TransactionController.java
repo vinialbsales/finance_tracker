@@ -3,6 +3,7 @@ package com.vinialb.finance_tracker.controller;
 import com.vinialb.finance_tracker.dto.TransactionRequestDTO;
 import com.vinialb.finance_tracker.dto.TransactionResponseDTO;
 import com.vinialb.finance_tracker.service.TransactionService;
+import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -17,7 +18,7 @@ public class TransactionController {
     }
 
     @PostMapping("/transactions")
-    public TransactionResponseDTO post(@RequestBody TransactionRequestDTO transactionRequestDTO) {
+    public TransactionResponseDTO post(@Valid @RequestBody TransactionRequestDTO transactionRequestDTO) {
         return transactionService.create(transactionRequestDTO);
     }
 
