@@ -21,6 +21,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -161,17 +162,184 @@ class CategoryServiceTest {
 
     @Test
     @DisplayName("Should throw a CategoryNotFoundException when the Category is not found")
-    void getByIdCase2() throws CategoryNotFoundException {
+    void getByIdCase2() {
         when(categoryRepository.findById(1)).thenReturn(Optional.empty());
         CategoryNotFoundException thrown = Assertions.assertThrows(CategoryNotFoundException.class, () -> categoryService.getById(1));
         Assertions.assertEquals("Category not found with id 1", thrown.getMessage());
+        verify(categoryRepository, times(1)).findById(1);
+        verify(categoryMapperImp, never()).toResponse(any(Category.class));
     }
 
     @Test
-    void update() {
+    @DisplayName("Should update both fields of Category if it is found")
+    void updateCase1() {
+        Category testCategory = new Category("Food", null);
+        LocalDateTime timestamp = LocalDateTime.now();
+        ReflectionTestUtils.setField(testCategory, "id", 1);
+        ReflectionTestUtils.setField(testCategory, "createdAt", timestamp);
+        ReflectionTestUtils.setField(testCategory, "updatedAt", timestamp);
+
+        when(categoryRepository.findById(1)).thenReturn(Optional.of(testCategory));
+
+        CategoryRequestDTO testRequest = new CategoryRequestDTO("Bank", "#000000");
+
+        when(categoryRepository.save(any(Category.class))).thenReturn(testCategory);
+
+        CategoryResponseDTO expectedResponse = new CategoryResponseDTO(
+                1,
+                "Bank",
+                "#000000",
+                timestamp,
+                timestamp
+        );
+
+        when(categoryMapperImp.toResponse(testCategory)).thenReturn(expectedResponse);
+
+        CategoryResponseDTO realResponse = categoryService.update(1, testRequest);
+
+        verify(categoryRepository, times(1)).findById(1);
+        verify(categoryRepository, times(1)).save(testCategory);
+        verify(categoryMapperImp, times(1)).toResponse(testCategory);
+        assertEquals(expectedResponse, realResponse);
+        assertEquals("Bank", testCategory.getName());
+        assertEquals("#000000", testCategory.getColor());
     }
 
     @Test
-    void delete() {
+    @DisplayName("Should update the name of Category if it is found")
+    void updateCase2() {
+        Category testCategory = new Category("Food", "#000000");
+        LocalDateTime timestamp = LocalDateTime.now();
+        ReflectionTestUtils.setField(testCategory, "id", 1);
+        ReflectionTestUtils.setField(testCategory, "createdAt", timestamp);
+        ReflectionTestUtils.setField(testCategory, "updatedAt", timestamp);
+
+        when(categoryRepository.findById(1)).thenReturn(Optional.of(testCategory));
+
+        CategoryRequestDTO testRequest = new CategoryRequestDTO("Bank", null);
+
+        when(categoryRepository.save(any(Category.class))).thenReturn(testCategory);
+
+        CategoryResponseDTO expectedResponse = new CategoryResponseDTO(
+                1,
+                "Bank",
+                "#000000",
+                timestamp,
+                timestamp
+        );
+
+        when(categoryMapperImp.toResponse(testCategory)).thenReturn(expectedResponse);
+
+        CategoryResponseDTO realResponse = categoryService.update(1, testRequest);
+
+        verify(categoryRepository, times(1)).findById(1);
+        verify(categoryRepository, times(1)).save(testCategory);
+        verify(categoryMapperImp, times(1)).toResponse(testCategory);
+        assertEquals(expectedResponse, realResponse);
+        assertEquals("Bank", testCategory.getName());
+        assertEquals("#000000", testCategory.getColor());
+    }
+
+    @Test
+    @DisplayName("Should update the color of Category if it is found")
+    void updateCase3() {
+        Category testCategory = new Category("Food", "#000000");
+        LocalDateTime timestamp = LocalDateTime.now();
+        ReflectionTestUtils.setField(testCategory, "id", 1);
+        ReflectionTestUtils.setField(testCategory, "createdAt", timestamp);
+        ReflectionTestUtils.setField(testCategory, "updatedAt", timestamp);
+
+        when(categoryRepository.findById(1)).thenReturn(Optional.of(testCategory));
+
+        CategoryRequestDTO testRequest = new CategoryRequestDTO(null, "#FF0000");
+
+        when(categoryRepository.save(any(Category.class))).thenReturn(testCategory);
+
+        CategoryResponseDTO expectedResponse = new CategoryResponseDTO(
+                1,
+                "Food",
+                "#FF0000",
+                timestamp,
+                timestamp
+        );
+
+        when(categoryMapperImp.toResponse(testCategory)).thenReturn(expectedResponse);
+
+        CategoryResponseDTO realResponse = categoryService.update(1, testRequest);
+
+        verify(categoryRepository, times(1)).findById(1);
+        verify(categoryRepository, times(1)).save(testCategory);
+        verify(categoryMapperImp, times(1)).toResponse(testCategory);
+        assertEquals(expectedResponse, realResponse);
+        assertEquals("Food", testCategory.getName());
+        assertEquals("#FF0000", testCategory.getColor());
+    }
+
+    @Test
+    @DisplayName("Shouldn't update the Category")
+    void updateCase4() {
+        Category testCategory = new Category("Food", "#000000");
+        LocalDateTime timestamp = LocalDateTime.now();
+        ReflectionTestUtils.setField(testCategory, "id", 1);
+        ReflectionTestUtils.setField(testCategory, "createdAt", timestamp);
+        ReflectionTestUtils.setField(testCategory, "updatedAt", timestamp);
+
+        when(categoryRepository.findById(1)).thenReturn(Optional.of(testCategory));
+
+        CategoryRequestDTO testRequest = new CategoryRequestDTO(null, null);
+
+        when(categoryRepository.save(any(Category.class))).thenReturn(testCategory);
+
+        CategoryResponseDTO expectedResponse = new CategoryResponseDTO(
+                1,
+                "Food",
+                "#000000",
+                timestamp,
+                timestamp
+        );
+
+        when(categoryMapperImp.toResponse(testCategory)).thenReturn(expectedResponse);
+
+        CategoryResponseDTO realResponse = categoryService.update(1, testRequest);
+
+        verify(categoryRepository, times(1)).findById(1);
+        verify(categoryRepository, times(1)).save(testCategory);
+        verify(categoryMapperImp, times(1)).toResponse(testCategory);
+        assertEquals(expectedResponse, realResponse);
+        assertEquals("Food", testCategory.getName());
+        assertEquals("#000000", testCategory.getColor());
+    }
+
+    @Test
+    @DisplayName("Should throw a CategoryNotFoundException when unable to find the Category")
+    void updateCase5() {
+        CategoryRequestDTO testRequest = new CategoryRequestDTO("Bank", "#000000");
+        when(categoryRepository.findById(1)).thenReturn(Optional.empty());
+        CategoryNotFoundException thrown = Assertions.assertThrows(CategoryNotFoundException.class, () -> categoryService.update(1, testRequest));
+        assertEquals("Category not found with id 1", thrown.getMessage());
+        verify(categoryRepository, times(1)).findById(1);
+        verify(categoryRepository, never()).save(any(Category.class));
+        verify(categoryMapperImp, never()).toResponse(any(Category.class));
+    }
+
+    @Test
+    @DisplayName("Should delete the Category when found")
+    void deleteCase1() {
+        when(categoryRepository.existsById(1)).thenReturn(true);
+
+        categoryService.delete(1);
+
+        verify(categoryRepository, times(1)).existsById(1);
+        verify(categoryRepository, times(1)).deleteById(1);
+    }
+
+    @Test
+    @DisplayName("Should throw a Category not found exception when unable to find the Category")
+    void deleteCase2() {
+        when(categoryRepository.existsById(1)).thenReturn(false);
+        CategoryNotFoundException thrown = Assertions.assertThrows(CategoryNotFoundException.class, () -> categoryService.delete(1));
+        assertEquals("Category not found with id 1", thrown.getMessage());
+        verify(categoryRepository, times(1)).existsById(1);
+        verify(categoryRepository, never()).deleteById(anyInt());
     }
 }
