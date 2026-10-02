@@ -3,6 +3,7 @@ package com.vinialb.finance_tracker.controller;
 import com.vinialb.finance_tracker.dto.CategoryRequestDTO;
 import com.vinialb.finance_tracker.dto.CategoryResponseDTO;
 import com.vinialb.finance_tracker.service.CategoryService;
+import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -17,7 +18,7 @@ public class CategoryController {
     }
 
     @PostMapping("/categories")
-    public CategoryResponseDTO post(@RequestBody CategoryRequestDTO categoryRequestDTO) {
+    public CategoryResponseDTO post(@Valid @RequestBody CategoryRequestDTO categoryRequestDTO) {
         return categoryService.create(categoryRequestDTO);
     }
 

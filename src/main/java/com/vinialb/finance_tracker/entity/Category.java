@@ -36,4 +36,8 @@ public class Category {
         this.name = name;
         this.color = color;
     }
+
+    public Category(String name) {
+        this(name, null);
+    }
 }
