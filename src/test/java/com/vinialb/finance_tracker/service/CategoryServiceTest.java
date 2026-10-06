@@ -37,7 +37,6 @@ class CategoryServiceTest {
     private CategoryMapperImp categoryMapperImp;
 
     @InjectMocks
-    @Autowired
     private CategoryService categoryService;
 
     @BeforeEach
