@@ -1,6 +1,5 @@
 // Tela de listagem de categorias.
 
-import { useState } from "react";
 import { useCategories } from "../../hooks/useCategories";
 
 export function CategoriesPage() {
