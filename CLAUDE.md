@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Overview
 
-Finance tracker with a Spring Boot 4 / Java 17 REST backend (repo root, Maven) and a React 19 + TypeScript + Vite + Tailwind 4 frontend in `frontend/` (entry `main.tsx` → `App.tsx`; Phase 2 CRUD files under `src/` are comment-only stubs the user is implementing by hand). Persistence is PostgreSQL via Spring Data JPA.
+Finance tracker with a Spring Boot 4 / Java 17 REST backend (repo root, Maven) and a React 19 + TypeScript + Vite + Tailwind 4 frontend in `frontend/` (entry `main.tsx` → `App.tsx`, which sets up react-router: `/` dashboard, `/categories`, `/transactions`, all inside `components/layout/AppLayout`). The user writes the data layer (`api/`, `hooks/`, `types/`, form state/handlers) by hand — keep visual changes out of that logic. Persistence is PostgreSQL via Spring Data JPA.
 
 ## Project structure
 
@@ -17,12 +17,13 @@ finance_tracker/
 │   ├── tsconfig.json             # app config (src/), strict
 │   ├── tsconfig.node.json        # vite.config.ts only
 │   ├── vite.config.ts
-│   └── src/                      # main.tsx, App.tsx
+│   └── src/                      # main.tsx, App.tsx (routes), index.css (Tailwind theme tokens)
 │       ├── api/                  # axiosClient, categories, transactions
 │       ├── types/                # category, transaction (mirror backend DTOs)
 │       ├── hooks/                # useCategories, useTransactions (React Query)
-│       ├── pages/                # categories/, transactions/ (list page + form)
-│       └── components/           # shared UI (empty)
+│       ├── lib/                  # format (BRL/date/cents), summary (dashboard totals), ui (shared class strings)
+│       ├── pages/                # dashboard/, categories/, transactions/ (list page + form)
+│       └── components/           # layout/ (sidebar), ui/ (Panel, StatTile, CategoryDot…), charts/ (Recharts)
 └── src/
     ├── main/
     │   ├── java/com/vinialb/finance_tracker/
@@ -64,6 +65,20 @@ Layered package structure under `com.vinialb.finance_tracker`: `controller` → 
 - Mapping entity↔DTO is done by hand-written `@Component` mappers in the package named `constructor` (`*Mapper` interface + `*MapperImp`). Services inject the concrete `*MapperImp` class directly, not the interface.
 - Errors: `CategoryNotFoundException` / `TransactionNotFoundException` are translated by `exception/GlobalExceptionHandler`.
 - `CorsConfig` allows only `http://localhost:5173` (the Vite dev server) on `/api/**`, methods GET/POST/PATCH/DELETE/OPTIONS. Add any new HTTP method there or the frontend's preflight will fail.
+
+Frontend:
+- `VITE_API_BASE_URL` (in `frontend/.env`) points axios at `http://localhost:8080/api`.
+- `types/` mirrors the Java DTOs by hand — keep them in sync when a DTO changes (e.g. `TransactionRequestDTO.name` is `@NotBlank`; omitting it gives a 400).
+- `amount` is a string end to end (BigDecimal serialized as text). Convert with `Number()` only for display; sums go through `lib/format.ts` `toCents`/`fromCents`.
+- There are no aggregate endpoints yet; dashboard totals are computed client-side in `lib/summary.ts`.
+- `LocalDate` strings are formatted with `timeZone: "UTC"` (`formatDate`) to avoid an off-by-one day in Brazil's timezone.
+- Visual style: neutral zinc palette, thin borders, no heavy shadows. `accent` (defined in `index.css` `@theme`) is reserved for income; category `color` (gray `#808080` fallback via `CategoryDot` / `FALLBACK_CATEGORY_COLOR`) is the only other data color, including chart bars.
+- List pages render their form inside a local `*Layout` wrapper used in every loading/error/data branch, so form state survives refetches.
+
+## Commits
+
+- Use Conventional Commits (`feat`, `fix`, `docs`, `style`, `refactor`, `test`, `chore`) with descriptions in English.
+- Split changes into multiple logically scoped commits instead of one large commit.
 
 ## Gotchas
 
