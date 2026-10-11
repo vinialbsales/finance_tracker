@@ -3,6 +3,7 @@
 export type TransactionType = "EXPENSE" | "INCOME"
 
 export type TransactionRequest = {
+  name: string;
   categoryId: number;
   amount: string;
   type: TransactionType;
@@ -11,9 +12,11 @@ export type TransactionRequest = {
 
 export type TransactionResponse = {
   id: number;
+  name: string;
   categoryId: number;
   amount: string;
   type: TransactionType;
+  date: string | null;
   createdAt: string;
   updatedAt: string;
 }
