@@ -40,13 +40,13 @@ export function CategoryForm() {
           <input
             id="category-color"
             type="color"
-            value={color}
+            value={color || "#808080"}
             onChange={(event) => setColor(event.target.value)}
             className="h-9 w-12 cursor-pointer rounded-md border border-zinc-200 bg-white p-1"
           />
           <span className="flex items-center gap-2 text-xs text-zinc-500">
             <CategoryDot color={color || null} />
-            <span className={color ? "font-mono uppercase" : undefined}>{color || "Sem cor (cinza)"}</span>
+            <span className={color ? "font-mono uppercase" : undefined}>{color || "Sem cor"}</span>
           </span>
         </div>
       </div>
