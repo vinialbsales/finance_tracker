@@ -16,7 +16,7 @@ export type TransactionResponse = {
   categoryId: number;
   amount: string;
   type: TransactionType;
-  date: string | null;
+  date: string;
   createdAt: string;
   updatedAt: string;
 }
