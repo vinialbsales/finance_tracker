@@ -23,16 +23,19 @@ public class Transaction {
     private Integer id;
 
     @NotNull
+    @Column(nullable = false)
     @Setter
     private BigDecimal amount;
 
     @Setter
     @Enumerated(EnumType.STRING)
     @NotNull
+    @Column(nullable = false)
     private TransactionType type;
 
     @Setter
     @NotBlank
+    @Column(nullable = false)
     private String name;
 
     @CreationTimestamp
@@ -42,6 +45,8 @@ public class Transaction {
     LocalDateTime updatedAt;
 
     @Setter
+    @NotNull
+    @Column(nullable = false)
     LocalDate date;
 
     @Setter

@@ -18,6 +18,7 @@ public class Category {
     private Integer id;
 
     @NotBlank
+    @Column(nullable = false)
     @Setter
     private String name;
 
