@@ -1,7 +1,7 @@
-// Ações por linha da listagem de transações (excluir com confirmação inline).
+// Ações por linha da listagem de transações (editar, e excluir com confirmação inline).
 
 import { useState } from "react";
-import { Trash2 } from "lucide-react";
+import { Pencil, Trash2 } from "lucide-react";
 import { useDeleteTransaction } from "../../hooks/useTransactions";
 import { iconButtonClass } from "../../lib/ui";
 
@@ -12,10 +12,12 @@ const textButtonClass =
 type TransactionActionsProps = {
   transactionId: number;
   transactionName: string;
+  isEditing: boolean;
+  onEdit: () => void;
 };
 
 // Hooks take the id at call time, so each row gets its own instance.
-export function TransactionActions({ transactionId, transactionName }: TransactionActionsProps) {
+export function TransactionActions({ transactionId, transactionName, isEditing, onEdit }: TransactionActionsProps) {
   const [confirming, setConfirming] = useState(false);
   const deleteTransaction = useDeleteTransaction(transactionId);
 
@@ -44,14 +46,26 @@ export function TransactionActions({ transactionId, transactionName }: Transacti
   }
 
   return (
-    <button
-      type="button"
-      onClick={() => setConfirming(true)}
-      aria-label={`Excluir ${transactionName}`}
-      title="Excluir"
-      className={iconButtonClass}
-    >
-      <Trash2 className="h-4 w-4" strokeWidth={1.75} aria-hidden="true" />
-    </button>
+    <>
+      <button
+        type="button"
+        onClick={onEdit}
+        aria-label={`Editar ${transactionName}`}
+        aria-pressed={isEditing}
+        title="Editar"
+        className={`${iconButtonClass} ${isEditing ? "bg-zinc-100 text-zinc-900" : ""}`}
+      >
+        <Pencil className="h-4 w-4" strokeWidth={1.75} aria-hidden="true" />
+      </button>
+      <button
+        type="button"
+        onClick={() => setConfirming(true)}
+        aria-label={`Excluir ${transactionName}`}
+        title="Excluir"
+        className={iconButtonClass}
+      >
+        <Trash2 className="h-4 w-4" strokeWidth={1.75} aria-hidden="true" />
+      </button>
+    </>
   );
 }

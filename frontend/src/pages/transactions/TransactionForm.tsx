@@ -1,9 +1,11 @@
 // Formulário de criar/editar transação.
 
 import React, { useState } from "react";
-import { useCreateTransaction } from "../../hooks/useTransactions";
+import { useCreateTransaction, usePatchTransaction } from "../../hooks/useTransactions";
 import { useCategories } from "../../hooks/useCategories";
-import type { TransactionType } from "../../types/transaction";
+import type { TransactionResponse, TransactionType } from "../../types/transaction";
+import type { CategoryResponse } from "../../types/category";
+import { CategoryDot } from "../../components/ui/CategoryDot";
 import { inputClass, labelClass, primaryButtonClass } from "../../lib/ui";
 
 // Local calendar day as "YYYY-MM-DD" (the en-CA locale formats dates that way).
@@ -16,14 +18,32 @@ const TYPE_OPTIONS: { value: TransactionType; label: string }[] = [
   { value: "INCOME", label: "Receita" },
 ];
 
-export function TransactionForm() {
-  const [name, setName] = useState("");
-  const [amount, setAmount] = useState("0");
+// "12.34" -> "1234": the amount input keeps its value as a string of cents.
+// Done on the string so the decimal amount never goes through floating point.
+function toCentDigits(amount: string) {
+  const [integer, fraction = ""] = amount.split(".");
+  return String(Number(integer + (fraction + "00").slice(0, 2)));
+}
+
+type TransactionFormProps = {
+  // When present the form edits this transaction; otherwise it creates a new one.
+  transaction?: TransactionResponse;
+  category?: CategoryResponse;
+  onDone?: () => void;
+};
+
+export function TransactionForm({ transaction, category, onDone }: TransactionFormProps) {
+  const isEditing = transaction !== undefined;
+  const [name, setName] = useState(transaction?.name ?? "");
+  const [amount, setAmount] = useState(transaction ? toCentDigits(transaction.amount) : "0");
   const [amountError, setAmountError] = useState(false);
-  const [type, setType] = useState<TransactionType>("EXPENSE");
-  const [date, setDate] = useState(today);
+  const [type, setType] = useState<TransactionType>(transaction?.type ?? "EXPENSE");
+  const [date, setDate] = useState(transaction?.date ?? today());
   const [categoryId, setCategoryId] = useState("");
   const createTransaction = useCreateTransaction();
+  // Hooks can't be called conditionally; in create mode this instance is simply never used.
+  const patchTransaction = usePatchTransaction(transaction?.id ?? 0);
+  const mutation = isEditing ? patchTransaction : createTransaction;
   const { data: categories, isLoading: categoriesLoading } = useCategories();
 
   function formatCurrency(amount: string) {
@@ -39,6 +59,14 @@ export function TransactionForm() {
 
     if (Number(amount) < 1) {
       setAmountError(true);
+      return;
+    }
+
+    if (isEditing) {
+      // The category is fixed once a transaction exists, so it is never part of the patch.
+      patchTransaction.mutate({ name: name, amount: (Number(amount) / 100).toFixed(2), type: type, date: date }, {
+        onSuccess: () => onDone?.()
+      });
       return;
     }
 
@@ -65,7 +93,7 @@ export function TransactionForm() {
             >
               <input
                 type="radio"
-                name="transaction-type"
+                name={isEditing ? "transaction-type-edit" : "transaction-type"}
                 value={option.value}
                 checked={type === option.value}
                 onChange={() => setType(option.value)}
@@ -121,30 +149,41 @@ export function TransactionForm() {
         </div>
       </div>
 
-      <div>
-        <label htmlFor="transaction-category" className={labelClass}>Categoria</label>
-        <select
-          id="transaction-category"
-          required
-          value={categoryId}
-          onChange={(event) => setCategoryId(event.target.value)}
-          disabled={categoriesLoading || !hasCategories}
-          className={inputClass}
-        >
-          <option value="" disabled>
-            {categoriesLoading ? "Carregando…" : hasCategories ? "Selecione" : "Crie uma categoria primeiro"}
-          </option>
-          {categories?.map((category) => (
-            <option key={category.id} value={category.id}>{category.name}</option>
-          ))}
-        </select>
-      </div>
+      {isEditing ? (
+        <div>
+          <p className={labelClass}>Categoria</p>
+          <p className="mt-1.5 flex items-center gap-2 py-2 text-sm text-zinc-900">
+            <CategoryDot color={category?.color} />
+            {category?.name ?? "Sem categoria"}
+          </p>
+          <p className="text-xs text-zinc-400">A categoria não pode ser alterada.</p>
+        </div>
+      ) : (
+        <div>
+          <label htmlFor="transaction-category" className={labelClass}>Categoria</label>
+          <select
+            id="transaction-category"
+            required
+            value={categoryId}
+            onChange={(event) => setCategoryId(event.target.value)}
+            disabled={categoriesLoading || !hasCategories}
+            className={inputClass}
+          >
+            <option value="" disabled>
+              {categoriesLoading ? "Carregando…" : hasCategories ? "Selecione" : "Crie uma categoria primeiro"}
+            </option>
+            {categories?.map((category) => (
+              <option key={category.id} value={category.id}>{category.name}</option>
+            ))}
+          </select>
+        </div>
+      )}
 
-      <button type="submit" disabled={createTransaction.isPending || !hasCategories} className={primaryButtonClass}>
-        {createTransaction.isPending ? "Salvando…" : "Adicionar transação"}
+      <button type="submit" disabled={mutation.isPending || (!isEditing && !hasCategories)} className={primaryButtonClass}>
+        {mutation.isPending ? "Salvando…" : isEditing ? "Salvar alterações" : "Adicionar transação"}
       </button>
 
-      {createTransaction.isError && (
+      {mutation.isError && (
         <p role="alert" className="text-xs text-zinc-600">
           Não foi possível salvar a transação. Confira os campos e tente novamente.
         </p>
