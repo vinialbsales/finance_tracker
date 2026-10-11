@@ -39,7 +39,7 @@ finance_tracker/
     │   │   └── exception/        # not-found exceptions, GlobalExceptionHandler
     │   └── resources/
     │       ├── application.properties
-    │       └── db/migration/     # Flyway (empty)
+    │       └── db/migration/     # Flyway: V1–V2 schema, V3 category seed
     └── test/
         ├── java/com/vinialb/finance_tracker/
         │   ├── FinanceTrackerApplicationTests.java
@@ -82,5 +82,6 @@ Frontend:
 
 ## Gotchas
 
-- `spring.jpa.hibernate.ddl-auto=create` in `application.properties` **drops and recreates the schema on every startup**, so data does not persist across runs. Flyway is on the classpath, but `src/main/resources/db/migration` is empty — no migrations exist yet.
+- The schema is owned by Flyway (`src/main/resources/db/migration`: V1 categories, V2 transactions, V3 seed of 10 fixed categories); `ddl-auto=validate` only checks it. Any entity change needs a new `V<n>__*.sql` migration — never edit an applied one. Note `transactions.category_id` is NOT NULL in the DB even though the `@JoinColumn` doesn't say so.
+- `FinanceTrackerApplicationTests` (no test profile) boots against the real local Postgres, so `./mvnw test` runs the migrations there.
 - Tests: service tests are plain Mockito unit tests (`@Mock`/`@InjectMocks`, no Spring context). `src/test/resources/application-test.properties` configures in-memory H2 (test-scope dependency) for Spring-context tests; activate it with `@ActiveProfiles("test")`, otherwise the default Postgres config is used.
