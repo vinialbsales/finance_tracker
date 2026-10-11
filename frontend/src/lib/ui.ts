@@ -13,3 +13,7 @@ export const primaryButtonClass =
   "inline-flex w-full items-center justify-center gap-2 rounded-md bg-zinc-900 px-3 py-2 text-sm font-medium text-white " +
   "transition-colors hover:bg-zinc-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-zinc-900 " +
   "disabled:cursor-not-allowed disabled:bg-zinc-300";
+
+export const iconButtonClass =
+  "rounded-md p-1.5 text-zinc-400 transition-colors hover:bg-zinc-100 hover:text-zinc-900 " +
+  "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-zinc-900 disabled:opacity-50";

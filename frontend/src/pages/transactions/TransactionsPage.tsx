@@ -4,6 +4,7 @@ import type { ReactNode } from "react";
 import { useTransactions } from "../../hooks/useTransactions";
 import { useCategories } from "../../hooks/useCategories";
 import { TransactionForm } from "./TransactionForm";
+import { TransactionActions } from "./TransactionActions";
 import { PageHeader } from "../../components/ui/PageHeader";
 import { Panel } from "../../components/ui/Panel";
 import { TransactionRow } from "../../components/ui/TransactionRow";
@@ -36,6 +37,7 @@ export function TransactionsPage() {
               key={transaction.id}
               transaction={transaction}
               category={categoriesById.get(transaction.categoryId)}
+              actions={<TransactionActions transactionId={transaction.id} transactionName={transaction.name} />}
             />
           ))}
         </ul>
