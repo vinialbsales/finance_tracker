@@ -18,19 +18,35 @@ const TYPE_OPTIONS: { value: TransactionType; label: string }[] = [
 
 export function TransactionForm() {
   const [name, setName] = useState("");
-  const [amount, setAmount] = useState("");
+  const [amount, setAmount] = useState("0");
+  const [amountError, setAmountError] = useState(false);
   const [type, setType] = useState<TransactionType>("EXPENSE");
   const [date, setDate] = useState(today);
   const [categoryId, setCategoryId] = useState("");
   const createTransaction = useCreateTransaction();
   const { data: categories, isLoading: categoriesLoading } = useCategories();
 
+  function formatCurrency(amount: string) {
+    const cents = Number(amount);
+    return (cents / 100).toLocaleString("pt-BR", {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    });
+  }
+
   function handleSubmit(event: React.SubmitEvent<HTMLFormElement>) {
     event.preventDefault();
-    createTransaction.mutate({ name: name, amount: amount, type: type, date: date, categoryId: Number(categoryId) }, {
+
+    if (Number(amount) < 1) {
+      setAmountError(true);
+      return;
+    }
+
+    createTransaction.mutate({ name: name, amount: (Number(amount) / 100).toFixed(2), type: type, date: date, categoryId: Number(categoryId) }, {
       onSuccess: () => {
         setName("");
         setAmount("");
+        setAmountError(false);
       }
     });
   }
@@ -79,16 +95,18 @@ export function TransactionForm() {
           <label htmlFor="transaction-amount" className={labelClass}>Valor (R$)</label>
           <input
             id="transaction-amount"
-            type="number"
+            type="text"
             inputMode="decimal"
             required
-            min="0.01"
-            step="0.01"
-            value={amount}
-            onChange={(event) => setAmount(event.target.value)}
+            value={formatCurrency(amount)}
+            onChange={(event) => {
+              const digits = event.target.value.replace(/\D/g, "")
+              setAmount(digits || "0")
+            }}
             placeholder="0,00"
             className={`${inputClass} tabular-nums`}
           />
+          {amountError && (<p role="alert" className="text-xs text-zinc-600">O valor mínimo é R$ 0,01</p>)}
         </div>
         <div>
           <label htmlFor="transaction-date" className={labelClass}>Data</label>
