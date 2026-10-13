@@ -10,6 +10,6 @@ public class TransactionMapperImp implements TransactionMapper{
 
     @Override
     public TransactionResponseDTO toResponse(Transaction transaction) {
-        return new TransactionResponseDTO(transaction.getId(), transaction.getName(), transaction.getAmount(), transaction.getType(), transaction.getDate(), transaction.getCreatedAt(), transaction.getUpdatedAt(), transaction.getCategory().getId());
+        return new TransactionResponseDTO(transaction.getId(), transaction.getName(), transaction.getAmount(), transaction.getType(), transaction.getDate(), transaction.getCreatedAt(), transaction.getUpdatedAt(), transaction.getCategory() == null ? null : transaction.getCategory().getId());
     }
 }

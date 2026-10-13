@@ -12,4 +12,9 @@ public class GlobalExceptionHandler {
     public ResponseEntity<String> globalExceptionHandler(RuntimeException runtimeException) {
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(runtimeException.getMessage());
     }
+
+    @ExceptionHandler(CategoryRequiredException.class)
+    public ResponseEntity<String> badRequestHandler(RuntimeException runtimeException) {
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(runtimeException.getMessage());
+    }
 }

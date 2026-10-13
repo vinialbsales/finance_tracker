@@ -6,6 +6,7 @@ import com.vinialb.finance_tracker.dto.TransactionResponseDTO;
 import com.vinialb.finance_tracker.entity.Category;
 import com.vinialb.finance_tracker.entity.Transaction;
 import com.vinialb.finance_tracker.exception.CategoryNotFoundException;
+import com.vinialb.finance_tracker.exception.CategoryRequiredException;
 import com.vinialb.finance_tracker.exception.TransactionNotFoundException;
 import com.vinialb.finance_tracker.repository.CategoryRepository;
 import com.vinialb.finance_tracker.repository.TransactionRepository;
@@ -634,5 +635,91 @@ class TransactionServiceTest {
         TransactionNotFoundException thrown = Assertions.assertThrows(TransactionNotFoundException.class, () -> transactionService.delete(1));
         verify(transactionRepository, never()).deleteById(anyInt());
         assertEquals("Transaction not found with id 1", thrown.getMessage());
+    }
+
+    @Test
+    @DisplayName("Should create an INCOME transaction without a Category")
+    void createCase3() {
+        TransactionRequestDTO testRequest = new TransactionRequestDTO(
+                BigDecimal.valueOf(3000),
+                INCOME,
+                "Salary",
+                LocalDate.now(),
+                null
+        );
+
+        Transaction testTransaction = new Transaction(
+                BigDecimal.valueOf(3000),
+                INCOME,
+                "Salary",
+                LocalDate.now(),
+                null
+        );
+        ReflectionTestUtils.setField(testTransaction, "id", 1);
+
+        when(transactionRepository.save(any(Transaction.class))).thenReturn(testTransaction);
+
+        TransactionResponseDTO expectedResponse = new TransactionResponseDTO(
+                1,
+                testTransaction.getName(),
+                testTransaction.getAmount(),
+                testTransaction.getType(),
+                testTransaction.getDate(),
+                null,
+                null,
+                null
+        );
+
+        when(transactionMapperImp.toResponse(testTransaction)).thenReturn(expectedResponse);
+
+        TransactionResponseDTO realResponse = transactionService.create(testRequest);
+
+        verify(categoryRepository, never()).findById(any());
+        verify(transactionRepository, times(1)).save(argThat(transaction -> transaction.getCategory() == null));
+        assertEquals(expectedResponse, realResponse);
+    }
+
+    @Test
+    @DisplayName("Should throw a CategoryRequiredException when an EXPENSE has no Category")
+    void createCase4() {
+        TransactionRequestDTO testRequest = new TransactionRequestDTO(
+                BigDecimal.valueOf(100),
+                EXPENSE,
+                "BBQ",
+                LocalDate.now(),
+                null
+        );
+
+        CategoryRequiredException thrown = Assertions.assertThrows(CategoryRequiredException.class, () -> transactionService.create(testRequest));
+        assertEquals("Category is required for EXPENSE transactions", thrown.getMessage());
+        verify(categoryRepository, never()).findById(any());
+        verify(transactionRepository, never()).save(any(Transaction.class));
+    }
+
+    @Test
+    @DisplayName("Should throw a CategoryRequiredException when an INCOME without Category is changed to EXPENSE")
+    void updateCase8() {
+        Transaction testTransaction = new Transaction(
+                BigDecimal.valueOf(3000),
+                INCOME,
+                "Salary",
+                LocalDate.of(2026, 9, 2),
+                null
+        );
+        ReflectionTestUtils.setField(testTransaction, "id", 1);
+
+        when(transactionRepository.findById(1)).thenReturn(Optional.of(testTransaction));
+
+        TransactionRequestDTO testRequest = new TransactionRequestDTO(
+                null,
+                EXPENSE,
+                null,
+                null,
+                null
+        );
+
+        Assertions.assertThrows(CategoryRequiredException.class, () -> transactionService.update(1, testRequest));
+        verify(transactionRepository, never()).save(any(Transaction.class));
+        assertEquals(INCOME, testTransaction.getType());
     }
 }

@@ -5,7 +5,9 @@ import com.vinialb.finance_tracker.dto.TransactionRequestDTO;
 import com.vinialb.finance_tracker.dto.TransactionResponseDTO;
 import com.vinialb.finance_tracker.entity.Category;
 import com.vinialb.finance_tracker.entity.Transaction;
+import com.vinialb.finance_tracker.enumerated.TransactionType;
 import com.vinialb.finance_tracker.exception.CategoryNotFoundException;
+import com.vinialb.finance_tracker.exception.CategoryRequiredException;
 import com.vinialb.finance_tracker.repository.CategoryRepository;
 import com.vinialb.finance_tracker.repository.TransactionRepository;
 import jakarta.transaction.Transactional;
@@ -28,8 +30,17 @@ public class TransactionService {
         this.categoryRepository = categoryRepository;
     }
 
+    // Category is required for EXPENSE only; INCOME may have none, but one that is sent is kept.
+    private void requireCategoryForExpense(TransactionType type, boolean hasCategory) {
+        if (type == TransactionType.EXPENSE && !hasCategory) {
+            throw new CategoryRequiredException();
+        }
+    }
+
     public TransactionResponseDTO create(TransactionRequestDTO transactionRequestDTO) {
-        Category category = categoryRepository.findById(transactionRequestDTO.categoryId()).orElseThrow(() -> new CategoryNotFoundException(transactionRequestDTO.categoryId()));
+        Integer categoryId = transactionRequestDTO.categoryId();
+        requireCategoryForExpense(transactionRequestDTO.type(), categoryId != null);
+        Category category = categoryId == null ? null : categoryRepository.findById(categoryId).orElseThrow(() -> new CategoryNotFoundException(categoryId));
         Transaction transaction = new Transaction(transactionRequestDTO.amount(), transactionRequestDTO.type(), transactionRequestDTO.name(), transactionRequestDTO.date(), category);
         Transaction saved = transactionRepository.save(transaction);
         return transactionMapperImp.toResponse(saved);
@@ -51,6 +62,10 @@ public class TransactionService {
 
     public TransactionResponseDTO update(Integer transactionId, TransactionRequestDTO transactionRequestDTO) {
         Transaction transaction = transactionRepository.findById(transactionId).orElseThrow(() -> new TransactionNotFoundException(transactionId));
+        // The category can't be changed on update, so check the type the transaction will end up with
+        // against the category it already has (an uncategorized INCOME can't become an EXPENSE).
+        TransactionType resultingType = transactionRequestDTO.type() != null ? transactionRequestDTO.type() : transaction.getType();
+        requireCategoryForExpense(resultingType, transaction.getCategory() != null);
         if (transactionRequestDTO.name() != null) {
             transaction.setName(transactionRequestDTO.name());
         }
