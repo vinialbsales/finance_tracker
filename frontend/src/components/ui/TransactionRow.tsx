@@ -20,9 +20,14 @@ export function TransactionRow({ transaction, category, actions }: TransactionRo
       <div className="min-w-0 flex-1">
         <p className="truncate text-sm font-medium text-zinc-900">{transaction.name}</p>
         <div className="mt-1 flex items-center gap-1.5 text-xs text-zinc-500">
-          <CategoryDot color={category?.color} />
-          <span className="truncate">{category?.name ?? "Sem categoria"}</span>
-          <span aria-hidden="true" className="text-zinc-300">·</span>
+          {/* Income may have no category at all: then only the date is shown. */}
+          {transaction.categoryId != null && (
+            <>
+              <CategoryDot color={category?.color} />
+              <span className="truncate">{category?.name ?? "Sem categoria"}</span>
+              <span aria-hidden="true" className="text-zinc-300">·</span>
+            </>
+          )}
           <span className="shrink-0">{formatDate(transaction.date ?? transaction.createdAt)}</span>
         </div>
       </div>

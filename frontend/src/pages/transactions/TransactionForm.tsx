@@ -45,6 +45,15 @@ export function TransactionForm({ transaction, category, onDone }: TransactionFo
   const patchTransaction = usePatchTransaction(transaction?.id ?? 0);
   const mutation = isEditing ? patchTransaction : createTransaction;
   const { data: categories, isLoading: categoriesLoading } = useCategories();
+  const needsCategory = type === "EXPENSE";
+  // Editing can't add a category, so an income saved without one can't become an expense.
+  const canBecomeExpense = !isEditing || transaction.categoryId != null;
+
+  function handleTypeChange(nextType: TransactionType) {
+    setType(nextType);
+    // Income doesn't take a category; drop any selection so a stale one isn't submitted.
+    if (nextType === "INCOME") setCategoryId("");
+  }
 
   function formatCurrency(amount: string) {
     const cents = Number(amount);
@@ -70,7 +79,7 @@ export function TransactionForm({ transaction, category, onDone }: TransactionFo
       return;
     }
 
-    createTransaction.mutate({ name: name, amount: (Number(amount) / 100).toFixed(2), type: type, date: date, categoryId: Number(categoryId) }, {
+    createTransaction.mutate({ name: name, amount: (Number(amount) / 100).toFixed(2), type: type, date: date, ...(needsCategory && { categoryId: Number(categoryId) }) }, {
       onSuccess: () => {
         setName("");
         setAmount("");
@@ -89,20 +98,24 @@ export function TransactionForm({ transaction, category, onDone }: TransactionFo
           {TYPE_OPTIONS.map((option) => (
             <label
               key={option.value}
-              className="cursor-pointer rounded-[5px] px-3 py-1.5 text-center text-sm text-zinc-500 transition-colors has-checked:bg-zinc-900 has-checked:font-medium has-checked:text-white has-focus-visible:outline-2 has-focus-visible:outline-offset-2 has-focus-visible:outline-zinc-900"
+              className="cursor-pointer rounded-[5px] has-disabled:cursor-not-allowed has-disabled:text-zinc-300 px-3 py-1.5 text-center text-sm text-zinc-500 transition-colors has-checked:bg-zinc-900 has-checked:font-medium has-checked:text-white has-focus-visible:outline-2 has-focus-visible:outline-offset-2 has-focus-visible:outline-zinc-900"
             >
               <input
                 type="radio"
                 name={isEditing ? "transaction-type-edit" : "transaction-type"}
                 value={option.value}
                 checked={type === option.value}
-                onChange={() => setType(option.value)}
+                onChange={() => handleTypeChange(option.value)}
+                disabled={option.value === "EXPENSE" && !canBecomeExpense}
                 className="sr-only"
               />
               {option.label}
             </label>
           ))}
         </div>
+        {!canBecomeExpense && (
+          <p className="mt-1.5 text-xs text-zinc-400">Receitas sem categoria não podem virar despesa.</p>
+        )}
       </fieldset>
 
       <div>
@@ -150,36 +163,40 @@ export function TransactionForm({ transaction, category, onDone }: TransactionFo
       </div>
 
       {isEditing ? (
-        <div>
-          <p className={labelClass}>Categoria</p>
-          <p className="mt-1.5 flex items-center gap-2 py-2 text-sm text-zinc-900">
-            <CategoryDot color={category?.color} />
-            {category?.name ?? "Sem categoria"}
-          </p>
-          <p className="text-xs text-zinc-400">A categoria não pode ser alterada.</p>
-        </div>
+        transaction.categoryId != null && (
+          <div>
+            <p className={labelClass}>Categoria</p>
+            <p className="mt-1.5 flex items-center gap-2 py-2 text-sm text-zinc-900">
+              <CategoryDot color={category?.color} />
+              {category?.name ?? "Sem categoria"}
+            </p>
+            <p className="text-xs text-zinc-400">A categoria não pode ser alterada.</p>
+          </div>
+        )
       ) : (
-        <div>
-          <label htmlFor="transaction-category" className={labelClass}>Categoria</label>
-          <select
-            id="transaction-category"
-            required
-            value={categoryId}
-            onChange={(event) => setCategoryId(event.target.value)}
-            disabled={categoriesLoading || !hasCategories}
-            className={inputClass}
-          >
-            <option value="" disabled>
-              {categoriesLoading ? "Carregando…" : hasCategories ? "Selecione" : "Crie uma categoria primeiro"}
-            </option>
-            {categories?.map((category) => (
-              <option key={category.id} value={category.id}>{category.name}</option>
-            ))}
-          </select>
-        </div>
+        needsCategory && (
+          <div>
+            <label htmlFor="transaction-category" className={labelClass}>Categoria</label>
+            <select
+              id="transaction-category"
+              required
+              value={categoryId}
+              onChange={(event) => setCategoryId(event.target.value)}
+              disabled={categoriesLoading || !hasCategories}
+              className={inputClass}
+            >
+              <option value="" disabled>
+                {categoriesLoading ? "Carregando…" : hasCategories ? "Selecione" : "Crie uma categoria primeiro"}
+              </option>
+              {categories?.map((category) => (
+                <option key={category.id} value={category.id}>{category.name}</option>
+              ))}
+            </select>
+          </div>
+        )
       )}
 
-      <button type="submit" disabled={mutation.isPending || (!isEditing && !hasCategories)} className={primaryButtonClass}>
+      <button type="submit" disabled={mutation.isPending || (!isEditing && needsCategory && !hasCategories)} className={primaryButtonClass}>
         {mutation.isPending ? "Salvando…" : isEditing ? "Salvar alterações" : "Adicionar transação"}
       </button>
 

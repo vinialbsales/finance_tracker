@@ -43,10 +43,13 @@ export function summarizeTransactions(
     } else {
       expenseCents += cents;
       expenseCount += 1;
-      expenseCentsByCategory.set(
-        transaction.categoryId,
-        (expenseCentsByCategory.get(transaction.categoryId) ?? 0) + cents,
-      );
+      // The backend requires a category on every expense; the guard only narrows the type.
+      if (transaction.categoryId != null) {
+        expenseCentsByCategory.set(
+          transaction.categoryId,
+          (expenseCentsByCategory.get(transaction.categoryId) ?? 0) + cents,
+        );
+      }
     }
   }
 

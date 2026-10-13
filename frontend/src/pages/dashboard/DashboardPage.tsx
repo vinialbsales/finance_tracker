@@ -156,7 +156,7 @@ export function DashboardPage() {
                 <TransactionRow
                   key={transaction.id}
                   transaction={transaction}
-                  category={categoriesById.get(transaction.categoryId)}
+                  category={transaction.categoryId != null ? categoriesById.get(transaction.categoryId) : undefined}
                 />
               ))}
             </ul>

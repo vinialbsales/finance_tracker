@@ -27,7 +27,7 @@ export function TransactionsPage() {
   const editing = transactions?.find((transaction) => transaction.id === editingId);
   const editingProps = {
     editing,
-    editingCategory: editing && categoriesById.get(editing.categoryId),
+    editingCategory: editing?.categoryId != null ? categoriesById.get(editing.categoryId) : undefined,
     onStopEditing: () => setEditingId(null),
   };
 
@@ -48,7 +48,7 @@ export function TransactionsPage() {
             <TransactionRow
               key={transaction.id}
               transaction={transaction}
-              category={categoriesById.get(transaction.categoryId)}
+              category={transaction.categoryId != null ? categoriesById.get(transaction.categoryId) : undefined}
               actions={
                 <TransactionActions
                   transactionId={transaction.id}
