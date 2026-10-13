@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Overview
 
-Finance tracker with a Spring Boot 4 / Java 17 REST backend (repo root, Maven) and a React 19 + TypeScript + Vite + Tailwind 4 frontend in `frontend/` (entry `main.tsx` → `App.tsx`, which sets up react-router: `/` dashboard, `/categories`, `/transactions`, all inside `components/layout/AppLayout`). The user writes the data layer (`api/`, `hooks/`, `types/`, form state/handlers) by hand — keep visual changes out of that logic. Persistence is PostgreSQL via Spring Data JPA.
+Finance tracker with a Spring Boot 4 / Java 17 REST backend (repo root, Maven) and a React 19 + TypeScript + Vite + Tailwind 4 frontend in `frontend/` (entry `main.tsx` → `App.tsx`, which sets up react-router: `/` dashboard and `/transactions`, both inside `components/layout/AppLayout`; unknown paths redirect to `/`). The user writes the data layer (`api/`, `hooks/`, `types/`, form state/handlers) by hand — keep visual changes out of that logic. Persistence is PostgreSQL via Spring Data JPA.
 
 ## Project structure
 
@@ -22,7 +22,7 @@ finance_tracker/
 │       ├── types/                # category, transaction (mirror backend DTOs)
 │       ├── hooks/                # useCategories, useTransactions (React Query)
 │       ├── lib/                  # format (BRL/date/cents), summary (dashboard totals), ui (shared class strings)
-│       ├── pages/                # dashboard/, categories/, transactions/ (list page + form)
+│       ├── pages/                # dashboard/, transactions/ (list page + form)
 │       └── components/           # layout/ (sidebar), ui/ (Panel, StatTile, CategoryDot…), charts/ (Recharts)
 └── src/
     ├── main/
@@ -62,6 +62,7 @@ Frontend (from `frontend/`): `npm run dev` (serves on :5173), `npm run build` (r
 Layered package structure under `com.vinialb.finance_tracker`: `controller` → `service` → `repository` (Spring Data JPA) → `entity`, with `dto` for request/response payloads.
 
 - Controllers expose everything under `/api` (`/api/transactions`, `/api/categories`); updates use `PATCH`, not `PUT`.
+- Categories are read-only: the 10 rows seeded by Flyway V3 are the whole set, and `/api/categories` only has GET (list, by id). There is no category create/update/delete on either side, and no `CategoryRequestDTO`.
 - Mapping entity↔DTO is done by hand-written `@Component` mappers in the package named `constructor` (`*Mapper` interface + `*MapperImp`). Services inject the concrete `*MapperImp` class directly, not the interface.
 - Errors: `CategoryNotFoundException` / `TransactionNotFoundException` are translated by `exception/GlobalExceptionHandler`.
 - `CorsConfig` allows only `http://localhost:5173` (the Vite dev server) on `/api/**`, methods GET/POST/PATCH/DELETE/OPTIONS. Add any new HTTP method there or the frontend's preflight will fail.
@@ -73,6 +74,7 @@ Frontend:
 - There are no aggregate endpoints yet; dashboard totals are computed client-side in `lib/summary.ts`.
 - `LocalDate` strings are formatted with `timeZone: "UTC"` (`formatDate`) to avoid an off-by-one day in Brazil's timezone.
 - Visual style: neutral zinc palette, thin borders, no heavy shadows. `accent` (defined in `index.css` `@theme`) is reserved for income; category `color` (gray `#808080` fallback via `CategoryDot` / `FALLBACK_CATEGORY_COLOR`) is the only other data color, including chart bars.
+- The dashboard chart's category icons (`CATEGORY_ICONS` in `components/charts/ExpensesByCategoryChart.tsx`) are keyed by category name; a migration that renames a seeded category must update that map, or the bar falls back to the `Tag` icon.
 - List pages render their form inside a local `*Layout` wrapper used in every loading/error/data branch, so form state survives refetches.
 
 ## Commits
