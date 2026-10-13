@@ -39,7 +39,7 @@ finance_tracker/
     │   │   └── exception/        # not-found exceptions, GlobalExceptionHandler
     │   └── resources/
     │       ├── application.properties
-    │       └── db/migration/     # Flyway: V1–V2 schema, V3 category seed
+    │       └── db/migration/     # Flyway: V1–V2 schema, V3 category seed, V4 optional transaction category
     └── test/
         ├── java/com/vinialb/finance_tracker/
         │   ├── FinanceTrackerApplicationTests.java
@@ -84,6 +84,6 @@ Frontend:
 
 ## Gotchas
 
-- The schema is owned by Flyway (`src/main/resources/db/migration`: V1 categories, V2 transactions, V3 seed of 10 fixed categories); `ddl-auto=validate` only checks it. Any entity change needs a new `V<n>__*.sql` migration — never edit an applied one. Note `transactions.category_id` is NOT NULL in the DB even though the `@JoinColumn` doesn't say so.
+- The schema is owned by Flyway (`src/main/resources/db/migration`: V1 categories, V2 transactions, V3 seed of 10 fixed categories); `ddl-auto=validate` only checks it. Any entity change needs a new `V<n>__*.sql` migration — never edit an applied one. `transactions.category_id` is nullable since V4: category is required only for `EXPENSE`, enforced in `TransactionService` (`CategoryRequiredException` → 400), not by the DB or Bean Validation. `INCOME` may have no category (`categoryId: null` in responses), and since a transaction's category can't change on update, an uncategorized income can't be switched to expense.
 - `FinanceTrackerApplicationTests` (no test profile) boots against the real local Postgres, so `./mvnw test` runs the migrations there.
 - Tests: service tests are plain Mockito unit tests (`@Mock`/`@InjectMocks`, no Spring context). `src/test/resources/application-test.properties` configures in-memory H2 (test-scope dependency) for Spring-context tests; activate it with `@ActiveProfiles("test")`, otherwise the default Postgres config is used.
