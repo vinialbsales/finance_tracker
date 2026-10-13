@@ -1,20 +1,10 @@
-// Funções que chamam /api/categories (getAll, getById, update via PATCH),
-// tipadas com os tipos de types/category.ts. Usa a instância de api/axiosClient.ts.
+// Função que chama /api/categories (getAll), tipada com os tipos de types/category.ts.
+// As categorias são fixas (seed do Flyway), então a API é somente leitura.
+// Usa a instância de api/axiosClient.ts.
 import { api } from "./axiosClient";
-import type { CategoryRequest } from "../types/category";
 import type { CategoryResponse } from "../types/category";
 
 export async function listAllCategories(): Promise<CategoryResponse[]> {
   const response = await api.get<CategoryResponse[]>("/categories");
-  return response.data;
-}
-
-export async function getCategory(id: number): Promise<CategoryResponse> {
-  const response = await api.get<CategoryResponse>(`/categories/${id}`);
-  return response.data;
-}
-
-export async function patchCategory(id: number, request: Partial<CategoryRequest>): Promise<CategoryResponse> {
-  const response = await api.patch<CategoryResponse>(`/categories/${id}`, request);
   return response.data;
 }

@@ -1,9 +1,4 @@
-// Types equivalent to the backend's CategoryRequestDTO / CategoryResponseDTO.
-
-export type CategoryRequest = {
-  name: string;
-  color?: string;
-}
+// Type equivalent to the backend's CategoryResponseDTO.
 
 export type CategoryResponse = {
   id: number;
