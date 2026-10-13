@@ -136,7 +136,7 @@ function ExpensesBarChart({ data }: { data: CategoryTotal[] }) {
           tick={{ fill: MUTED_TEXT, fontSize: 12 }}
           tickFormatter={(value) => formatCompactCurrency(Number(value))}
         />
-        <Tooltip cursor={{ fill: HOVER_BAND }} content={CategoryTooltip} />
+        <Tooltip cursor={{ fill: HOVER_BAND }} content={CategoryTooltip} isAnimationActive={false} />
         <Bar dataKey="total" maxBarSize={40} radius={[4, 4, 0, 0]}>
           {data.map((row) => (
             <Cell key={row.categoryId} fill={row.color} />
@@ -154,7 +154,7 @@ function ExpensesDonutChart({ data, total }: { data: CategoryTotal[]; total: num
   return (
     <ResponsiveContainer width="100%" height={DONUT_SIZE}>
       <PieChart>
-        <Tooltip content={CategoryTooltip} />
+        <Tooltip content={CategoryTooltip} isAnimationActive={false} />
         <Pie
           data={data}
           dataKey="total"
