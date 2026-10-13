@@ -1,5 +1,5 @@
 import { NavLink, Outlet } from "react-router-dom";
-import { ArrowLeftRight, LayoutDashboard, Tags, Wallet } from "lucide-react";
+import { ArrowLeftRight, LayoutDashboard, Wallet } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
 type NavItem = {
@@ -10,7 +10,6 @@ type NavItem = {
 
 const NAV_ITEMS: NavItem[] = [
   { to: "/", label: "Dashboard", icon: LayoutDashboard },
-  { to: "/categories", label: "Categorias", icon: Tags },
   { to: "/transactions", label: "Transações", icon: ArrowLeftRight },
 ];
 

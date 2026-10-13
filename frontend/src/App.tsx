@@ -1,7 +1,6 @@
 import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import { AppLayout } from "./components/layout/AppLayout";
 import { DashboardPage } from "./pages/dashboard/DashboardPage";
-import { CategoriesPage } from "./pages/categories/CategoriesPage";
 import { TransactionsPage } from "./pages/transactions/TransactionsPage";
 
 function App() {
@@ -10,7 +9,6 @@ function App() {
       <Routes>
         <Route element={<AppLayout />}>
           <Route index element={<DashboardPage />} />
-          <Route path="categories" element={<CategoriesPage />} />
           <Route path="transactions" element={<TransactionsPage />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Route>
