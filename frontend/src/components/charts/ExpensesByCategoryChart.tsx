@@ -163,7 +163,7 @@ function ExpensesDonutChart({ data, total }: { data: CategoryTotal[]; total: num
           outerRadius="100%"
           startAngle={90}
           endAngle={-270}
-          stroke={SURFACE}
+          stroke="none"
           strokeWidth={data.length > 1 ? 2 : 0}
           isAnimationActive={false}
         >
