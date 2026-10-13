@@ -25,12 +25,6 @@ public class CategoryService {
         this.categoryMapperImp = categoryMapperImp;
     }
 
-    public CategoryResponseDTO create(CategoryRequestDTO categoryRequestDTO) {
-        Category category = new Category(categoryRequestDTO.name(), categoryRequestDTO.color());
-        Category saved = categoryRepository.save(category);
-        return categoryMapperImp.toResponse(saved);
-    }
-
     public List<CategoryResponseDTO> listAll() {
         List<Category> categories = categoryRepository.findAll();
         List<CategoryResponseDTO> categoryResponseDTOS = new ArrayList<>();
@@ -55,11 +49,5 @@ public class CategoryService {
         }
         Category saved = categoryRepository.save(category);
         return categoryMapperImp.toResponse(saved);
-    }
-
-    public void delete(Integer categoryId) {
-        if (categoryRepository.existsById(categoryId)) {
-            categoryRepository.deleteById(categoryId);
-        } else throw new CategoryNotFoundException(categoryId);
     }
 }

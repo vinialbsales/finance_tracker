@@ -45,32 +45,6 @@ class CategoryServiceTest {
     }
 
     @Test
-    @DisplayName("Should create a Category if all the attribute requirements are met")
-    void createCategoryCase() {
-        CategoryRequestDTO categoryRequestDTO = new CategoryRequestDTO("Food", null);
-        Category category = new Category(categoryRequestDTO.name(), categoryRequestDTO.color());
-
-        ReflectionTestUtils.setField(category, "id", 1);
-
-        LocalDateTime timestamp = LocalDateTime.now();
-        ReflectionTestUtils.setField(category, "createdAt", timestamp);
-        ReflectionTestUtils.setField(category, "updatedAt", timestamp);
-
-        CategoryResponseDTO categoryResponseDTO = new CategoryResponseDTO(category.getId(), category.getName(), category.getColor(), category.getCreatedAt(), category.getUpdatedAt());
-
-        when(categoryRepository.save(any(Category.class))).thenReturn(category);
-        when(categoryMapperImp.toResponse(any(Category.class))).thenReturn(categoryResponseDTO);
-
-        CategoryResponseDTO result = categoryService.create(categoryRequestDTO);
-
-        verify(categoryRepository, times(1)).save(any(Category.class));
-        verify(categoryMapperImp, times(1)).toResponse(category);
-        verifyNoMoreInteractions(categoryRepository, categoryMapperImp);
-
-        assertEquals(categoryResponseDTO, result);
-    }
-
-    @Test
     @DisplayName("Should return a list containing all the Categories found")
     void listAllCase1() {
         Category testCategory1 = new Category("Food", null);
@@ -319,26 +293,5 @@ class CategoryServiceTest {
         verify(categoryRepository, times(1)).findById(1);
         verify(categoryRepository, never()).save(any(Category.class));
         verify(categoryMapperImp, never()).toResponse(any(Category.class));
-    }
-
-    @Test
-    @DisplayName("Should delete the Category when found")
-    void deleteCase1() {
-        when(categoryRepository.existsById(1)).thenReturn(true);
-
-        categoryService.delete(1);
-
-        verify(categoryRepository, times(1)).existsById(1);
-        verify(categoryRepository, times(1)).deleteById(1);
-    }
-
-    @Test
-    @DisplayName("Should throw a Category not found exception when unable to find the Category")
-    void deleteCase2() {
-        when(categoryRepository.existsById(1)).thenReturn(false);
-        CategoryNotFoundException thrown = Assertions.assertThrows(CategoryNotFoundException.class, () -> categoryService.delete(1));
-        assertEquals("Category not found with id 1", thrown.getMessage());
-        verify(categoryRepository, times(1)).existsById(1);
-        verify(categoryRepository, never()).deleteById(anyInt());
     }
 }
