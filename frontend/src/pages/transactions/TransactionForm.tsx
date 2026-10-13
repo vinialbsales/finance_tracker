@@ -186,7 +186,7 @@ export function TransactionForm({ transaction, category, onDone }: TransactionFo
               className={inputClass}
             >
               <option value="" disabled>
-                {categoriesLoading ? "Carregando…" : hasCategories ? "Selecione" : "Crie uma categoria primeiro"}
+                {categoriesLoading ? "Carregando…" : hasCategories ? "Selecione" : "Nenhuma categoria disponível"}
               </option>
               {categories?.map((category) => (
                 <option key={category.id} value={category.id}>{category.name}</option>
