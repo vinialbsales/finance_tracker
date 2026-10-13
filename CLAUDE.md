@@ -36,7 +36,7 @@ finance_tracker/
     │   │   ├── dto/              # request/response DTOs
     │   │   ├── constructor/      # entity↔DTO mappers (*Mapper, *MapperImp)
     │   │   ├── enumerated/       # TransactionType
-    │   │   └── exception/        # not-found exceptions, GlobalExceptionHandler
+    │   │   └── exception/        # not-found + CategoryRequiredException, GlobalExceptionHandler
     │   └── resources/
     │       ├── application.properties
     │       └── db/migration/     # Flyway: V1–V2 schema, V3 category seed, V4 optional transaction category
@@ -64,7 +64,7 @@ Layered package structure under `com.vinialb.finance_tracker`: `controller` → 
 - Controllers expose everything under `/api` (`/api/transactions`, `/api/categories`); updates use `PATCH`, not `PUT`.
 - Categories are read-only: the 10 rows seeded by Flyway V3 are the whole set, and `/api/categories` only has GET (list, by id). There is no category create/update/delete on either side, and no `CategoryRequestDTO`.
 - Mapping entity↔DTO is done by hand-written `@Component` mappers in the package named `constructor` (`*Mapper` interface + `*MapperImp`). Services inject the concrete `*MapperImp` class directly, not the interface.
-- Errors: `CategoryNotFoundException` / `TransactionNotFoundException` are translated by `exception/GlobalExceptionHandler`.
+- Errors: `exception/GlobalExceptionHandler` maps `CategoryNotFoundException` / `TransactionNotFoundException` to 404 and `CategoryRequiredException` to 400, each with the message as a plain-text body. Bean Validation failures on `@Valid` request bodies get Spring's default 400. Business-rule checks live in the service and throw a custom exception registered there, not in Bean Validation annotations.
 - `CorsConfig` allows only `http://localhost:5173` (the Vite dev server) on `/api/**`, methods GET/POST/PATCH/DELETE/OPTIONS. Add any new HTTP method there or the frontend's preflight will fail.
 
 Frontend:
@@ -73,9 +73,11 @@ Frontend:
 - `amount` is a string end to end (BigDecimal serialized as text). Convert with `Number()` only for display; sums go through `lib/format.ts` `toCents`/`fromCents`.
 - There are no aggregate endpoints yet; dashboard totals are computed client-side in `lib/summary.ts`.
 - `LocalDate` strings are formatted with `timeZone: "UTC"` (`formatDate`) to avoid an off-by-one day in Brazil's timezone.
-- Visual style: neutral zinc palette, thin borders, no heavy shadows. `accent` (defined in `index.css` `@theme`) is reserved for income; category `color` (gray `#808080` fallback via `CategoryDot` / `FALLBACK_CATEGORY_COLOR`) is the only other data color, including chart bars.
+- Visual style: neutral zinc palette, thin borders, no heavy shadows. `accent` (defined in `index.css` `@theme`) is reserved for income; category `color` (gray `#808080` fallback via `CategoryDot` / `FALLBACK_CATEGORY_COLOR`) is the only other data color, including chart bars and donut slices.
+- `ExpensesByCategoryChart` (dashboard) shows vertical bars and a donut side by side (3:2 grid at every width). It sorts its own copy of the data, draws each bar's category icon above it with a `LabelList` `content` renderer (scaled to the bar width, hidden below 10px), and puts the total in the donut's center via `<Label position="center">`.
 - The dashboard chart's category icons (`CATEGORY_ICONS` in `components/charts/ExpensesByCategoryChart.tsx`) are keyed by category name; a migration that renames a seeded category must update that map, or the bar falls back to the `Tag` icon.
-- List pages render their form inside a local `*Layout` wrapper used in every loading/error/data branch, so form state survives refetches.
+- `TransactionsPage` renders its form inside a local `TransactionsLayout` wrapper used in every loading/error/data branch, so form state survives refetches.
+- `TransactionResponse.categoryId` is `number | null` (income may have none): guard lookups like `categoriesById.get(...)` against `null`. `TransactionForm` shows the category select only for `EXPENSE` and omits `categoryId` for `INCOME`.
 
 ## Commits
 
@@ -84,6 +86,7 @@ Frontend:
 
 ## Gotchas
 
-- The schema is owned by Flyway (`src/main/resources/db/migration`: V1 categories, V2 transactions, V3 seed of 10 fixed categories); `ddl-auto=validate` only checks it. Any entity change needs a new `V<n>__*.sql` migration — never edit an applied one. `transactions.category_id` is nullable since V4: category is required only for `EXPENSE`, enforced in `TransactionService` (`CategoryRequiredException` → 400), not by the DB or Bean Validation. `INCOME` may have no category (`categoryId: null` in responses), and since a transaction's category can't change on update, an uncategorized income can't be switched to expense.
+- The schema is owned by Flyway (`src/main/resources/db/migration`: V1 categories, V2 transactions, V3 seed of 10 fixed categories, V4 nullable `transactions.category_id`); `ddl-auto=validate` only checks it. Any entity change needs a new `V<n>__*.sql` migration — never edit an applied one. `transactions.category_id` is nullable since V4: category is required only for `EXPENSE`, enforced in `TransactionService` (`CategoryRequiredException` → 400), not by the DB or Bean Validation. `INCOME` may have no category (`categoryId: null` in responses), and since a transaction's category can't change on update, an uncategorized income can't be switched to expense.
+- Headless Chromium screenshots (`chromium --headless --screenshot`) don't advance Recharts animations, so animated bars render empty and their `LabelList` content is missing. Set `isAnimationActive={false}` temporarily to check a chart that way, then revert.
 - `FinanceTrackerApplicationTests` (no test profile) boots against the real local Postgres, so `./mvnw test` runs the migrations there.
 - Tests: service tests are plain Mockito unit tests (`@Mock`/`@InjectMocks`, no Spring context). `src/test/resources/application-test.properties` configures in-memory H2 (test-scope dependency) for Spring-context tests; activate it with `@ActiveProfiles("test")`, otherwise the default Postgres config is used.
