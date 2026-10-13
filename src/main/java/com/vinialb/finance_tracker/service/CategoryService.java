@@ -2,7 +2,6 @@ package com.vinialb.finance_tracker.service;
 
 import com.vinialb.finance_tracker.constructor.CategoryMapper;
 import com.vinialb.finance_tracker.constructor.CategoryMapperImp;
-import com.vinialb.finance_tracker.dto.CategoryRequestDTO;
 import com.vinialb.finance_tracker.dto.CategoryResponseDTO;
 import com.vinialb.finance_tracker.entity.Category;
 import com.vinialb.finance_tracker.exception.CategoryNotFoundException;
@@ -37,17 +36,5 @@ public class CategoryService {
     public CategoryResponseDTO getById(Integer categoryId) {
         Category category = categoryRepository.findById(categoryId).orElseThrow(() -> new CategoryNotFoundException(categoryId));
         return categoryMapperImp.toResponse(category);
-    }
-
-    public CategoryResponseDTO update(Integer categoryId, CategoryRequestDTO categoryRequestDTO) {
-        Category category = categoryRepository.findById(categoryId).orElseThrow(() -> new CategoryNotFoundException(categoryId));
-        if (categoryRequestDTO.name() != null) {
-            category.setName(categoryRequestDTO.name());
-        }
-        if (categoryRequestDTO.color() != null) {
-            category.setColor(categoryRequestDTO.color());
-        }
-        Category saved = categoryRepository.save(category);
-        return categoryMapperImp.toResponse(saved);
     }
 }
