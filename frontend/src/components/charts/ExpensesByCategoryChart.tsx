@@ -4,7 +4,6 @@ import type { LabelProps, TooltipContentProps } from "recharts";
 import type { CategoryTotal } from "../../lib/summary";
 import { formatCompactCurrency, formatCurrency, formatPercent, fromCents, toCents } from "../../lib/format";
 import {
-  Banknote,
   Car,
   Ellipsis,
   Gamepad2,
@@ -30,7 +29,6 @@ const CATEGORY_ICONS: Record<string, LucideIcon> = {
   "Educação": GraduationCap,
   "Compras": ShoppingBag,
   "Contas e utilidades": Receipt,
-  "Salário": Banknote,
   "Outros": Ellipsis,
 };
 const FALLBACK_CATEGORY_ICON = Tag;
@@ -44,7 +42,6 @@ const MUTED_TEXT = "#71717a"; // zinc-500
 const GRID_LINE = "#f4f4f5"; // zinc-100
 const HOVER_BAND = "#f4f4f5"; // zinc-100
 const STRONG_TEXT = "#18181b"; // zinc-900
-const SURFACE = "#ffffff";
 
 const CHART_HEIGHT = 280;
 const DONUT_SIZE = 240;
