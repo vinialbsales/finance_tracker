@@ -1,5 +1,6 @@
 package com.vinialb.finance_tracker.exception;
 
+import org.apache.coyote.Response;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -13,7 +14,7 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(runtimeException.getMessage());
     }
 
-    @ExceptionHandler(CategoryRequiredException.class)
+    @ExceptionHandler({CategoryRequiredException.class, InvalidDateException.class})
     public ResponseEntity<String> badRequestHandler(RuntimeException runtimeException) {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(runtimeException.getMessage());
     }
