@@ -14,8 +14,10 @@ import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
 import com.vinialb.finance_tracker.exception.TransactionNotFoundException;
 
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @Transactional
@@ -49,9 +51,18 @@ public class TransactionService {
     public List<TransactionResponseDTO> listAll() {
         List<Transaction> transactions = transactionRepository.findAll();
         List<TransactionResponseDTO> transactionResponseDTOS = new ArrayList<>();
-        for (Transaction transaction : transactions) {
-            transactionResponseDTOS.add(transactionMapperImp.toResponse(transaction));
+        transactionResponseDTOS = transactions.stream().map((transaction) -> transactionMapperImp.toResponse(transaction)).collect(Collectors.toList());
+        return transactionResponseDTOS;
+    }
+
+    public List<TransactionResponseDTO> listBetween(LocalDate from, LocalDate to) {
+        if (from == null && to == null) {
+            return listAll();
         }
+
+        List<Transaction> transactions = transactionRepository.findByDateBetween(from, to);
+        List<TransactionResponseDTO> transactionResponseDTOS = new ArrayList<>();
+        transactionResponseDTOS = transactions.stream().map((transaction) -> transactionMapperImp.toResponse(transaction)).collect(Collectors.toList());
         return transactionResponseDTOS;
     }
 
