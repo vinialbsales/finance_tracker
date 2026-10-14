@@ -12,6 +12,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Transactional
 @Service
@@ -27,9 +28,7 @@ public class CategoryService {
     public List<CategoryResponseDTO> listAll() {
         List<Category> categories = categoryRepository.findAll();
         List<CategoryResponseDTO> categoryResponseDTOS = new ArrayList<>();
-        for (Category category : categories) {
-            categoryResponseDTOS.add(categoryMapperImp.toResponse(category));
-        }
+        categoryResponseDTOS = categories.stream().map(category -> categoryMapperImp.toResponse(category)).collect(Collectors.toList());
         return categoryResponseDTOS;
     }
 
