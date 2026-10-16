@@ -6,6 +6,7 @@ import com.vinialb.finance_tracker.service.TransactionService;
 import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDate;
 import java.util.List;
 
 @RestController
@@ -23,8 +24,8 @@ public class TransactionController {
     }
 
     @GetMapping("/transactions")
-    public List<TransactionResponseDTO> get() {
-        return transactionService.listAll();
+    public List<TransactionResponseDTO> get(@RequestParam(required = false) LocalDate from, @RequestParam(required = false)LocalDate to) {
+        return transactionService.listBetween(from, to);
     }
 
     @GetMapping("/transactions/{id}")
