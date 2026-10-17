@@ -18,9 +18,9 @@ import { ExpensesByCategoryChart } from "../../components/charts/ExpensesByCateg
 const RECENT_COUNT = 5;
 
 const PERIOD_OPTIONS = [
-  { days: 7, label: "Últimos 7 dias" },
-  { days: 30, label: "Últimos 30 dias" },
-  { days: 365, label: "Últimos 365 dias" },
+  { days: 7, label: "Última semana" },
+  { days: 30, label: "Último mês" },
+  { days: 365, label: "Último ano" },
 ] as const;
 
 type PeriodDays = (typeof PERIOD_OPTIONS)[number]["days"];
