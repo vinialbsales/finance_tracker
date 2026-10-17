@@ -9,8 +9,8 @@ export async function createTransaction(request: TransactionRequest): Promise<Tr
   return response.data;
 }
 
-export async function listAllTransactions(): Promise<TransactionResponse[]> {
-  const response = await api.get<TransactionResponse[]>("/transactions");
+export async function listAllTransactions(from?: string, to?: string): Promise<TransactionResponse[]> {
+  const response = await api.get<TransactionResponse[]>("/transactions", { params: { from, to } });
   return response.data;
 }
 
@@ -20,7 +20,7 @@ export async function getTransaction(id: number): Promise<TransactionResponse> {
 }
 
 export async function patchTransaction(id: number, request: Partial<TransactionRequest>): Promise<TransactionResponse> {
-  const response = await api.patch<TransactionResponse>(`/transactions/${id}`, request);
+  const response = await api.patch(`/transactions/${id}`, request);
   return response.data;
 }
 
