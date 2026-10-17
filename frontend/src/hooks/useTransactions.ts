@@ -3,10 +3,10 @@ import { createTransaction, listAllTransactions, getTransaction, patchTransactio
 import { useQueryClient, useQuery, useMutation } from "@tanstack/react-query";
 import type { TransactionRequest } from "../types/transaction";
 
-export function useTransactions() {
+export function useTransactions(from?: string, to?: string) {
   return useQuery({
-    queryKey: ["transactions"],
-    queryFn: listAllTransactions
+    queryKey: ["transactions", from, to],
+    queryFn: () => listAllTransactions(from, to)
   })
 }
 

@@ -1,6 +1,6 @@
 // Visão geral: totais e gastos por categoria, calculados no próprio frontend.
 
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { ArrowDownRight, ArrowRight, ArrowUpRight, Scale } from "lucide-react";
 import { useTransactions } from "../../hooks/useTransactions";
@@ -17,12 +17,36 @@ import { ExpensesByCategoryChart } from "../../components/charts/ExpensesByCateg
 
 const RECENT_COUNT = 5;
 
+const PERIOD_OPTIONS = [
+  { days: 7, label: "Últimos 7 dias" },
+  { days: 30, label: "Últimos 30 dias" },
+  { days: 365, label: "Últimos 365 dias" },
+] as const;
+
+type PeriodDays = (typeof PERIOD_OPTIONS)[number]["days"];
+
+// Local calendar date as YYYY-MM-DD; toISOString() would use UTC and can jump a day ahead.
+function toIsoDate(date: Date) {
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${date.getFullYear()}-${month}-${day}`;
+}
+
+function periodRange(days: PeriodDays) {
+  const to = new Date();
+  const from = new Date(to);
+  from.setDate(from.getDate() - days);
+  return { from: toIsoDate(from), to: toIsoDate(to) };
+}
+
 function pluralize(count: number, singular: string, plural: string) {
   return `${count} ${count === 1 ? singular : plural}`;
 }
 
 export function DashboardPage() {
-  const { data: transactions, isLoading, error } = useTransactions();
+  const [periodDays, setPeriodDays] = useState<PeriodDays>(30);
+  const { from, to } = periodRange(periodDays);
+  const { data: transactions, isLoading, error } = useTransactions(from, to);
   const { data: categories, isLoading: categoriesLoading, error: categoriesError } = useCategories();
 
   const summary = useMemo(
@@ -38,7 +62,37 @@ export function DashboardPage() {
     [transactions],
   );
 
-  const header = <PageHeader title="Dashboard" description="Resumo calculado a partir de todas as transações registradas." />;
+  const periodFilter = (
+    <fieldset>
+      <legend className="sr-only">Período</legend>
+      <div className="flex rounded-md border border-zinc-200 p-0.5">
+        {PERIOD_OPTIONS.map((option) => (
+          <label
+            key={option.days}
+            className="cursor-pointer rounded-[5px] px-3 py-1.5 text-center text-xs text-zinc-500 transition-colors hover:text-zinc-900 has-checked:bg-zinc-900 has-checked:font-medium has-checked:text-white has-focus-visible:outline-2 has-focus-visible:outline-offset-2 has-focus-visible:outline-zinc-900"
+          >
+            <input
+              type="radio"
+              name="dashboard-period"
+              value={option.days}
+              checked={periodDays === option.days}
+              onChange={() => setPeriodDays(option.days)}
+              className="sr-only"
+            />
+            {option.label}
+          </label>
+        ))}
+      </div>
+    </fieldset>
+  );
+
+  const header = (
+    <PageHeader
+      title="Dashboard"
+      description="Resumo das transações registradas no período selecionado."
+      aside={periodFilter}
+    />
+  );
 
   if (isLoading || categoriesLoading) {
     return (
@@ -93,8 +147,8 @@ export function DashboardPage() {
       {!hasTransactions ? (
         <Panel>
           <EmptyState
-            title="Nenhuma transação registrada"
-            description="Os totais e o gráfico de gastos aparecem aqui assim que você adicionar suas primeiras transações."
+            title="Nenhuma transação no período"
+            description="Os totais e o gráfico de gastos aparecem aqui assim que houver transações no período selecionado."
             action={
               <Link
                 to="/transactions"
@@ -109,7 +163,7 @@ export function DashboardPage() {
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_22rem] lg:items-start">
           <Panel title="Despesas por categoria" description="Total gasto em cada categoria, do maior para o menor.">
             {summary.expensesByCategory.length === 0 ? (
-              <EmptyState title="Nenhuma despesa registrada" description="Apenas receitas foram lançadas até agora." />
+              <EmptyState title="Nenhuma despesa registrada" description="Apenas receitas foram lançadas no período." />
             ) : (
               <>
                 <div className="px-3 pt-4 pb-2">
