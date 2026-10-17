@@ -1,4 +1,3 @@
 package com.vinialb.finance_tracker.gemini.dto;
 
-public class Tool {
-}
+public record Tool(String type, String name, String description, ToolParameters parameters) {}
