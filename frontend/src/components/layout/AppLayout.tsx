@@ -1,18 +1,7 @@
-import { NavLink, Outlet } from "react-router-dom";
-import { ArrowLeftRight, LayoutDashboard, Wallet } from "lucide-react";
-import type { LucideIcon } from "lucide-react";
+import { Link, NavLink, Outlet } from "react-router-dom";
+import { Wallet } from "lucide-react";
 import { focusRingClass } from "../../lib/ui";
-
-type NavItem = {
-  to: string;
-  label: string;
-  icon: LucideIcon;
-};
-
-const NAV_ITEMS: NavItem[] = [
-  { to: "/", label: "Dashboard", icon: LayoutDashboard },
-  { to: "/transactions", label: "Transações", icon: ArrowLeftRight },
-];
+import { APP_PAGES, HOME_PATH } from "../../routes";
 
 function navLinkClass({ isActive }: { isActive: boolean }) {
   const base = `flex items-center gap-2.5 whitespace-nowrap rounded-md px-3 py-2 text-sm transition-colors ${focusRingClass}`;
@@ -36,16 +25,24 @@ export function AppLayout() {
       </a>
 
       <aside className="border-b border-zinc-200 bg-white md:fixed md:inset-y-0 md:left-0 md:w-60 md:border-r md:border-b-0">
-        <div className="flex items-center gap-2 px-5 py-4 md:py-6">
-          <Wallet className="h-5 w-5 text-zinc-900" strokeWidth={1.75} aria-hidden="true" />
-          <span className="text-sm font-semibold tracking-tight text-zinc-900">Finance Tracker</span>
+        {/* The app name links back to the hero page from anywhere. */}
+        <div className="px-3 py-2 md:py-4">
+          <Link
+            to={HOME_PATH}
+            className={`inline-flex items-center gap-2 rounded-md px-2 py-2 text-zinc-900 transition-colors hover:bg-zinc-50 active:bg-zinc-100 ${focusRingClass}`}
+          >
+            <Wallet className="h-5 w-5" strokeWidth={1.75} aria-hidden="true" />
+            <span className="text-sm font-semibold tracking-tight">Finance Tracker</span>
+          </Link>
         </div>
 
-        <nav aria-label="Principal" className="px-3 pb-3">
-          <ul className="flex gap-1 overflow-x-auto md:flex-col">
-            {NAV_ITEMS.map(({ to, label, icon: Icon }) => (
-              <li key={to}>
-                <NavLink to={to} end={to === "/"} className={navLinkClass}>
+        {/* overflow-x-auto clips anything outside the list's box, so the list's own
+            padding leaves room for the focus ring's 2px offset. */}
+        <nav aria-label="Principal" className="px-2 pb-2">
+          <ul className="flex gap-1 overflow-x-auto p-1 md:flex-col">
+            {APP_PAGES.map(({ path, label, icon: Icon }) => (
+              <li key={path}>
+                <NavLink to={path} className={navLinkClass}>
                   <Icon className="h-4 w-4 shrink-0" strokeWidth={1.75} aria-hidden="true" />
                   {label}
                 </NavLink>
