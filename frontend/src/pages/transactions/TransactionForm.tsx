@@ -1,12 +1,21 @@
 // Formulário de criar/editar transação.
 
 import React, { useState } from "react";
+import { AlertCircle } from "lucide-react";
 import { useCreateTransaction, usePatchTransaction } from "../../hooks/useTransactions";
 import { useCategories } from "../../hooks/useCategories";
 import type { TransactionResponse, TransactionType } from "../../types/transaction";
 import type { CategoryResponse } from "../../types/category";
 import { CategoryDot } from "../../components/ui/CategoryDot";
-import { inputClass, labelClass, primaryButtonClass } from "../../lib/ui";
+import {
+  errorTextClass,
+  helperTextClass,
+  inputClass,
+  labelClass,
+  primaryButtonClass,
+  segmentedGroupClass,
+  segmentedOptionClass,
+} from "../../lib/ui";
 
 // Local calendar day as "YYYY-MM-DD" (the en-CA locale formats dates that way).
 function today() {
@@ -94,12 +103,9 @@ export function TransactionForm({ transaction, category, onDone }: TransactionFo
     <form onSubmit={handleSubmit} className="space-y-5 p-5">
       <fieldset>
         <legend className={labelClass}>Tipo</legend>
-        <div className="mt-1.5 grid grid-cols-2 rounded-md border border-zinc-200 p-0.5">
+        <div className={`mt-1.5 grid grid-cols-2 ${segmentedGroupClass}`}>
           {TYPE_OPTIONS.map((option) => (
-            <label
-              key={option.value}
-              className="cursor-pointer rounded-[5px] has-disabled:cursor-not-allowed has-disabled:text-zinc-300 px-3 py-1.5 text-center text-sm text-zinc-500 transition-colors has-checked:bg-zinc-900 has-checked:font-medium has-checked:text-white has-focus-visible:outline-2 has-focus-visible:outline-offset-2 has-focus-visible:outline-zinc-900"
-            >
+            <label key={option.value} className={`${segmentedOptionClass} px-3 text-sm`}>
               <input
                 type="radio"
                 name={isEditing ? "transaction-type-edit" : "transaction-type"}
@@ -114,7 +120,7 @@ export function TransactionForm({ transaction, category, onDone }: TransactionFo
           ))}
         </div>
         {!canBecomeExpense && (
-          <p className="mt-1.5 text-xs text-zinc-400">Receitas sem categoria não podem virar despesa.</p>
+          <p className={helperTextClass}>Receitas sem categoria não podem virar despesa.</p>
         )}
       </fieldset>
 
@@ -124,6 +130,8 @@ export function TransactionForm({ transaction, category, onDone }: TransactionFo
           id="transaction-name"
           type="text"
           required
+          // Editing opens from a row's button: move focus (and the viewport) to the form.
+          autoFocus={isEditing}
           value={name}
           onChange={(event) => setName(event.target.value)}
           placeholder="Ex.: Supermercado"
@@ -131,8 +139,8 @@ export function TransactionForm({ transaction, category, onDone }: TransactionFo
         />
       </div>
 
-      <div className="grid grid-cols-2 gap-3">
-        <div>
+      <div className="grid grid-cols-1 gap-5 min-[400px]:grid-cols-2 min-[400px]:gap-3">
+        <div className="min-w-0">
           <label htmlFor="transaction-amount" className={labelClass}>Valor (R$)</label>
           <input
             id="transaction-amount"
@@ -145,11 +153,18 @@ export function TransactionForm({ transaction, category, onDone }: TransactionFo
               setAmount(digits || "0")
             }}
             placeholder="0,00"
+            aria-invalid={amountError || undefined}
+            aria-describedby={amountError ? "transaction-amount-error" : undefined}
             className={`${inputClass} tabular-nums`}
           />
-          {amountError && (<p role="alert" className="text-xs text-zinc-600">O valor mínimo é R$ 0,01</p>)}
+          {amountError && (
+            <p id="transaction-amount-error" role="alert" className={errorTextClass}>
+              <AlertCircle className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+              O valor mínimo é R$ 0,01
+            </p>
+          )}
         </div>
-        <div>
+        <div className="min-w-0">
           <label htmlFor="transaction-date" className={labelClass}>Data</label>
           <input
             id="transaction-date"
@@ -170,7 +185,7 @@ export function TransactionForm({ transaction, category, onDone }: TransactionFo
               <CategoryDot color={category?.color} />
               {category?.name ?? "Sem categoria"}
             </p>
-            <p className="text-xs text-zinc-400">A categoria não pode ser alterada.</p>
+            <p className="text-xs text-zinc-500">A categoria não pode ser alterada.</p>
           </div>
         )
       ) : (
@@ -201,7 +216,8 @@ export function TransactionForm({ transaction, category, onDone }: TransactionFo
       </button>
 
       {mutation.isError && (
-        <p role="alert" className="text-xs text-zinc-600">
+        <p role="alert" className="flex items-start gap-1.5 text-xs text-danger">
+          <AlertCircle className="mt-px h-3.5 w-3.5 shrink-0" aria-hidden="true" />
           Não foi possível salvar a transação. Confira os campos e tente novamente.
         </p>
       )}
