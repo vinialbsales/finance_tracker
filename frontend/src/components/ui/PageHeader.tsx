@@ -9,7 +9,9 @@ type PageHeaderProps = {
 export function PageHeader({ title, description, aside }: PageHeaderProps) {
   return (
     <header className="flex flex-wrap items-end justify-between gap-4 border-b border-zinc-200 pb-6">
-      <div>
+      {/* React 19 hoists <title> into <head>, so each page names its own browser tab. */}
+      <title>{`${title} · Finance Tracker`}</title>
+      <div className="min-w-0">
         <h1 className="text-2xl font-semibold tracking-tight text-zinc-900">{title}</h1>
         {description && <p className="mt-1 text-sm text-zinc-500">{description}</p>}
       </div>
